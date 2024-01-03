@@ -1,0 +1,14 @@
+﻿@page "/counter"
+@inject NavigationManager NavLink
+<h1>Counter</h1>
+
+
+<button class="btn btn-primary" @onclick="LinkHome">Click me</button>
+
+@code {
+
+    private void LinkHome()
+    {
+        NavLink.NavigateTo("/");
+    }
+}

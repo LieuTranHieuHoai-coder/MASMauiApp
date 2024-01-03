@@ -1,0 +1,157 @@
+﻿@using AssetManagementApp.Models
+@using MASMauiApp.Business
+@using MASMauiApp.Global
+@using MASMauiApp.Services
+@using MASMauiApp.ViewModels
+@using Microsoft.Maui
+@using Microsoft.Maui.Controls.PlatformConfiguration.AndroidSpecific
+@using MASMauiApp.Models
+@using Newtonsoft.Json
+@using System.Text
+@inject NavigationManager NavLink
+@page "/historyrepairmachine"
+<div class="card m-auto col-lg-12 col-xl-12 col-md-12 col-sm-12">
+    <div class="accrodion-regular">
+        <div class="text-center mt-5">
+            <h2>Thông tin lỗi</h2>
+        </div>
+        <div id="accordion3">
+            @for (int i = 0; i < _historyList.Count; i++)
+            {
+                var buttonid = i;
+                <div class="card">
+                    <div class="card-header" id="heading_@i">
+                        <h5 class="mb-0">
+                            <button class="btn btn-link collapsed w-100" @onclick="@(e => GetIdItem(buttonid))" data-toggle="collapse" data-target="#collapse_@i" aria-expanded="false" aria-controls="collapse_@i">
+                                <span class="fas mr-3 fa-angle-down"></span> @_historyList[i].DefectName
+                            </button>
+                        </h5>
+                    </div>
+                    <div id="collapse_@i" class="collapse" aria-labelledby="heading_@i" data-parent="#accordion3" style="">
+                        <div class="card-body">
+                            <h5>Date: @_historyList[i].CreatedDate</h5>
+                            <h5>User: @_historyList[i].User</h5>
+                            <h5>Other Defect: @_historyList[i].OtherDefect</h5>
+                        </div>
+                        <div class="card-body">
+                            <form>
+                                @foreach (var item in _repairMethodList)
+                                {
+                                    <label class="custom-control custom-radio custom-control-inline">
+                                        <input type="radio" name="radio-inline" @onchange="(e)=> InputMethod(item.Id,e.Value)" class="custom-control-input">
+                                        <span class="custom-control-label">@item.MethodNameVN</span>
+                                    </label>
+                                }
+                            </form>
+                            <div class="form-group">
+                                <label for="exampleFormControlTextarea1">Other Method:</label>
+                                <textarea class="form-control" @bind="@OtherMethod" id="exampleFormControlTextarea1" rows="3"></textarea>
+                            </div>
+                            <div class="">
+
+                                <!-- Button trigger modal -->
+                                <a class="btn btn-primary text-white" data-toggle="modal" data-target="#exampleModal_@buttonid">
+                                    Repair
+                                </a>
+                                <!-- Modal -->
+                                <div class="modal fade" id="exampleModal_@buttonid" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" style="display: none;">
+                                    <div class="modal-dialog" role="document">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
+                                                <a class="close" data-dismiss="modal" aria-label="Close">
+                                                    <span aria-hidden="true">×</span>
+                                                </a>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p>Are you sure about that ?</p>
+                                            </div>
+                                            <div class="modal-footer text-white">
+                                                <a class="btn btn-secondary" data-dismiss="modal">Close</a>
+                                                <a class="btn btn-primary" data-dismiss="modal" @onclick="UpdateDefect">Save changes</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+    <button class="btn btn-primary" @onclick="LinkHome">Home</button>
+</div>
+@code {
+    public HistoryRepairBusiness repairBusiness = new HistoryRepairBusiness();
+    public RepairMethodBusiness methodBusiness = new RepairMethodBusiness();
+    public List<MASHistoryRepairView> _historyList = new List<MASHistoryRepairView>();
+    public List<MASRepairMethods> _repairMethodList = new List<MASRepairMethods>();
+    public MASHistoryRepair historyRepair = new MASHistoryRepair();
+    public string OtherMethod = "";
+    protected override async Task OnInitializedAsync()
+    {
+        var historyResult = await repairBusiness.GetMASHistoryRepairDetails(MASMauiApp.Global.ObjClass.AssetCode);
+        var methodeResult = await methodBusiness.GetRepairMethods();
+
+        _historyList = (List<MASHistoryRepairView>)historyResult.Where(x => x.RepairStatus == true).ToList();
+        _repairMethodList = (List<MASRepairMethods>)methodeResult.ToList();
+        App.Current.On<Microsoft.Maui.Controls.PlatformConfiguration.Android>().UseWindowSoftInputModeAdjust(WindowSoftInputModeAdjust.Resize);
+    }
+    public async void UpdateDefect()
+    {
+        if (historyRepair.MethodId == 19)
+        {
+            historyRepair.OtherMethod = OtherMethod;
+        }
+        historyRepair.ModifiedDate = DateTime.Now;
+        historyRepair.ModifiedBy = MASMauiApp.Shared.SevicesBase.LOGGEDUSER.UserId.ToString();
+        await repairBusiness.Update(historyRepair);
+        var historyResult = await repairBusiness.GetMASHistoryRepairDetails(MASMauiApp.Global.ObjClass.AssetCode);
+        _historyList = (List<MASHistoryRepairView>)historyResult.Where(x => x.RepairStatus == true).ToList();
+        NavLink.Refresh();
+    }
+    public void GetIdItem(int item)
+    {
+        for (int i = 0; i < _historyList.Count; i++)
+        {
+            if (i == item)
+            {
+                historyRepair.Id = _historyList[i].Id;
+            }
+        }
+
+    }
+    public void InputMethod(int methodId, object checkedValue)
+    {
+        string value = checkedValue.ToString();
+        if (value == "on")
+        {
+            if (methodId == 19)
+            {
+                historyRepair.MethodId = methodId;
+                historyRepair.EndWork = DateTime.Now;
+                historyRepair.RepairStatus = false;
+                historyRepair.BrokenStatus = false;
+                historyRepair.WorkStatus = true;
+                historyRepair.AssetCode = MASMauiApp.Global.ObjClass.AssetCode;
+                historyRepair.ModifiedBy = MASMauiApp.Shared.SevicesBase.LOGGEDUSER.UserId.ToString();
+                historyRepair.OtherDefect = OtherMethod;
+            }
+            else
+            {
+                historyRepair.MethodId = methodId;
+                historyRepair.EndWork = DateTime.Now;
+                historyRepair.RepairStatus = false;
+                historyRepair.BrokenStatus = false;
+                historyRepair.WorkStatus = true;
+                historyRepair.AssetCode = MASMauiApp.Global.ObjClass.AssetCode;
+                historyRepair.ModifiedBy = MASMauiApp.Shared.SevicesBase.LOGGEDUSER.UserId.ToString();
+            }
+        }
+    }
+    public void LinkHome()
+    {
+        NavLink.NavigateTo("/Home");
+    }
+}

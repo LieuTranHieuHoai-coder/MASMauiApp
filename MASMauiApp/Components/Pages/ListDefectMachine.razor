@@ -1,0 +1,85 @@
+﻿@page "/listdefectmachine"
+@using MASMauiApp.Business
+@using MASMauiApp.Models
+@using AssetManagementApp.Models
+@using AssetManagementApp.Business
+@using MASMauiApp.Services
+@using MASMauiApp.ViewModels
+@using Microsoft.Maui.Controls.PlatformConfiguration.AndroidSpecific
+@using Newtonsoft.Json
+@inject IMasterDataBusiness MasterDataBusiness
+@inject IFactory FactoryService
+@inject NavigationManager NavLink
+@inject SweetAlertService Swal    
+<div class="card m-auto col-lg-12 col-xl-12 col-md-12 col-sm-12">
+    <div class="card-header text-center">
+        <NavLink class="nav-link">
+            <img class="logo-img" src="../assets/images/LogoMas.PNG" alt="logo">
+        </NavLink>
+        <span class="splash-description">List Defect In Company</span>
+    </div>
+    <div class="card-body">
+        <select class="form-select form-control form-control-lg" @onchange=@GetCheckedDepartment
+        aria-label="Default select example" id="listFactory">
+            <option selected>Open this select menu</option>
+            @foreach (var item in _departments)
+            {
+                <option value="@item.DeptCode">@item.DeptNameVn</option>
+            }
+        </select>
+        <div class="accrodion-regular mt-3">
+            <div id="accordion3">
+                @for (int i = 0; i < _historyList.Count; i++)
+                {
+                    var buttonid = i;
+                    <div class="card">
+                        <div class="card-header" id="heading_@i">
+                            <h5 class="mb-0">
+                                <button class="btn btn-link collapsed w-100" data-toggle="collapse" data-target="#collapse_@i" aria-expanded="false" aria-controls="collapse_@i">
+                                    <span class="fas mr-3 fa-angle-down"></span> @_historyList[i].AssetNameVn
+                                </button>
+                            </h5>
+                        </div>
+                        <div id="collapse_@i" class="collapse" aria-labelledby="heading_@i" data-parent="#accordion3" style="">
+                            <div class="card-body">
+                                <h5>Date: @_historyList[i].CreatedDate</h5>
+                                <h5>User: @_historyList[i].User</h5>
+                                <h5>Factory: @_historyList[i].DeptCode</h5>
+                                <h5>Line: @_historyList[i].Line</h5>
+                                <h5>Other Defect: @_historyList[i].OtherDefect</h5>
+                            </div>
+                        
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    <button class="btn btn-primary fixed-bottom" @onclick="LinkHome">Home </button>
+</div>
+@code {
+    public HistoryRepairBusiness repairBusiness = new HistoryRepairBusiness();
+    public List<MASHistoryRepairView> _historyList = new List<MASHistoryRepairView>(); 
+    public List<FactoryModel> _factories = new List<FactoryModel>();
+    public List<Departments> _departments = new List<Departments>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _factories = await FactoryService.GetAllFactories();
+        _departments = await MasterDataBusiness.GetDepartments();
+        var historyResult = await repairBusiness.GetListMASHistoryRepair();
+        _historyList = (List<MASHistoryRepairView>)historyResult.Where(x => x.RepairStatus == true).GroupBy(x=>x.AssetCode).Select(x=>x.First()).ToList();
+        App.Current.On<Microsoft.Maui.Controls.PlatformConfiguration.Android>().UseWindowSoftInputModeAdjust(WindowSoftInputModeAdjust.Resize);
+    }
+    public async void GetCheckedDepartment(ChangeEventArgs e)
+    {
+        var historyResult = await repairBusiness.GetListMASHistoryRepair();
+        _historyList = (List<MASHistoryRepairView>)historyResult.Where(x => x.RepairStatus == true).GroupBy(x => x.AssetCode).Select(x => x.First()).ToList();
+        _historyList = _historyList.Where(x => x.DeptCode == e.Value.ToString()).ToList();
+        StateHasChanged();
+    }
+    public void LinkHome()
+    {
+        NavLink.NavigateTo("/Home");
+    }
+}

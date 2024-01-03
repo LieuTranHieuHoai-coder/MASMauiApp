@@ -1,0 +1,117 @@
+﻿@page "/"
+@using MASMauiApp.Business
+@using MASMauiApp.Models
+@using AssetManagementApp.Models
+@using AssetManagementApp.Business
+@using MASMauiApp.Services
+@using MASMauiApp.XamlPages
+@using Microsoft.Maui.Controls.PlatformConfiguration.AndroidSpecific
+@using Newtonsoft.Json
+@inject IMasterDataBusiness MasterDataBusiness
+@inject IFactory FactoryService
+@inject NavigationManager NavLink
+@inject SweetAlertService Swal
+<style>
+    html,
+    body {
+        height: 100%;
+    }
+
+    body {
+        display: -ms-flexbox;
+        display: flex;
+        -ms-flex-align: center;
+        justify-content:center;
+        align-items: center;
+    }
+   .card{
+       padding:0px !important;
+   }
+</style>
+<div class="card">
+    <div class="card-header text-center">
+        <NavLink class="nav-link">
+            <img class="logo-img" src="../assets/images/logomas.png" alt="logo">
+        </NavLink>
+        <span class="splash-description">Please enter your user information.</span>
+    </div>
+    <div class="card-body">
+        <EditForm Model="@loginModel" OnInvalidSubmit="Submit">
+            <DataAnnotationsValidator></DataAnnotationsValidator>
+            <div class="form-group">
+                <select class="form-select form-control form-control-lg" aria-label="Default select example" id="listFactory" @bind="loginModel.Factory">
+                    <option selected>Open this select menu</option>
+                    @foreach (var item in _departments)
+                    {
+                        <option value="@item.DeptNameVn">@item.DeptNameVn</option>
+                    }
+                </select>
+                <ValidationMessage For="@(()=>loginModel.Factory)"></ValidationMessage>
+            </div>
+            
+            <div class="form-group">
+                <input class="form-control form-control-lg" @bind-value="loginModel.UserName" id="username" type="text" placeholder="Username" autocomplete="off">
+                <ValidationMessage For="@(()=>loginModel.UserName)"></ValidationMessage>
+            </div>
+            <div class="form-group">
+                <input class="form-control form-control-lg" @bind-value="loginModel.Password" id="password" type="password" placeholder="Password">
+                <ValidationMessage For="@(()=>loginModel.Password)"></ValidationMessage>
+            </div>
+            <button type="submit" class="btn btn-primary btn-lg btn-block" @onclick="LinkHome">Login</button>
+        </EditForm>
+    </div>
+
+</div>
+
+
+@code {
+    List<FactoryModel> _factories = new List<FactoryModel>();
+    List<Departments> _departments = new List<Departments>();
+    LoginModel loginModel = new LoginModel();
+    protected override async Task OnInitializedAsync()
+    {
+        _factories = await FactoryService.GetAllFactories();
+        _departments = await MasterDataBusiness.GetDepartments();
+        App.Current.On<Microsoft.Maui.Controls.PlatformConfiguration.Android>().UseWindowSoftInputModeAdjust(WindowSoftInputModeAdjust.Resize);
+    }
+
+    private void Submit()
+    {
+
+    }
+    private async void LinkHome()
+    {
+        if (!string.IsNullOrWhiteSpace(loginModel.UserName) && !string.IsNullOrEmpty(loginModel.Password) && loginModel.Factory != null)
+        {
+            var apiBaseUrl = MASMauiApp.Global.MasApiUrl.amsUrl;
+            var hashPw = AssetManagementApp.Shared.Encryptor.MD5Hash(loginModel.Password);
+            var api = $"/api/login?u={loginModel.UserName}&p={hashPw}";
+            using (var client = new HttpClient { BaseAddress = new Uri(apiBaseUrl) })
+            {
+                var response = await client.GetAsync(api);
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    if (!string.IsNullOrEmpty(content))
+                    {
+                        var user = JsonConvert.DeserializeObject<MASMauiApp.Models.Users>(content);
+                        MASMauiApp.Shared.SevicesBase.LOGGEDUSER = user;
+                        NavLink.NavigateTo("/Home");
+                    }
+                }
+                else
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Confirmation",
+                        Text = "Invalid User or Password!",
+                        Icon = SweetAlertIcon.Warning,
+                        CancelButtonText = "Cancel"
+                    });
+                }
+            }
+
+        }
+    }
+
+}

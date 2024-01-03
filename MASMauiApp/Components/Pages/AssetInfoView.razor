@@ -1,0 +1,277 @@
+﻿@page "/assetinfo"
+@using AssetManagementApp.Models
+@using MASMauiApp.Business
+@using MASMauiApp.Services
+@using Microsoft.Maui
+@using Microsoft.Maui.Controls.PlatformConfiguration.AndroidSpecific
+@using MASMauiApp.Models
+@inject IMasterDataBusiness MasterDataBusiness
+@inject IFactory FactoryService
+@inject GoBack goback
+@inject NavigationManager NavLink
+
+<div class="card m-auto col-lg-12 col-xl-12 col-md-12 col-sm-12">
+    <div class="mt-1">
+        <div class="text-left">
+            <NavLink class="nav-link">
+                <img class="logo-img" src="../assets/images/LogoMas.PNG" alt="logo">
+            </NavLink>
+        </div>
+    </div>
+    <div class="text-center mt-5">
+        <h2>Thông tin tài sản</h2>
+    </div>
+    <table class="table table-bordered border border-2 bg-white">
+        <tbody>
+            <tr>
+                <th scope="row">Mã Tài Sản: </th>
+                <td>@asset.AssetId</td>
+            </tr>
+            <tr>
+                <th scope="row">Tên Tài Sản: </th>
+                <td>@asset.AssetNameVn</td>
+            </tr>
+            <tr>
+                <th scope="row">Tên Brand:</th>
+                <td>@asset.BrandCode</td>
+            </tr>
+            <tr>
+                <th scope="row">Tên Model:</th>
+                <td>@asset.ModelCode</td>
+            </tr>
+            <tr>
+                <th scope="row">Bộ Phận:</th>
+                <td>@asset.DeptNameVn</td>
+            </tr>
+            <tr>
+                <th scope="row">Vị Trí:</th>
+                <td>@asset.LocationNameVn</td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="mt-2 col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+        <div class="section-block">
+            <h5 class="section-title">Input Defect</h5>
+        </div>
+        <div class="accrodion-regular">
+            <div id="accordion3">
+                <div class="card">
+                    <div class="card-header" id="headingSeven">
+                        <h5 class="mb-0">
+                            <button class="btn btn-link collapsed w-100" data-toggle="collapse" data-target="#collapseSeven" aria-expanded="false" aria-controls="collapseSeven">
+                                <span class="fas mr-3 fa-angle-down"></span> Factory
+                            </button>
+                        </h5>
+                    </div>
+                    <div id="collapseSeven" class="collapse" aria-labelledby="headingSeven" data-parent="#accordion3" style="">
+                        <div class="card-body">
+                            <form>
+                                @foreach (var item in _departments)
+                                {
+                                    <label class="custom-control custom-radio custom-control-inline">
+                                        <input type="radio" name="radio-inline" @onclick="()=> GetCheckedFactory(item.DeptId,item.DeptCode)" class="custom-control-input"><span class="custom-control-label">@item.DeptNameVn</span>
+                                    </label>
+                                }
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="card mb-2">
+                    <div class="card-header" id="headingEight">
+                        <h5 class="mb-0">
+                            <button class="btn btn-link collapsed w-100" data-toggle="collapse" data-target="#collapseEight" aria-expanded="false" aria-controls="collapseEight">
+                                <span class="fas mr-3 fa-angle-down"></span> Line
+                            </button>
+                        </h5>
+                    </div>
+                    <div id="collapseEight" class="collapse" aria-labelledby="headingEight" data-parent="#accordion3" style="">
+                        <div class="card-body">
+                            <form>
+                                @foreach (var item in _locations)
+                                {
+                                    <label class="custom-control custom-radio custom-control-inline">
+                                        <input type="radio" name="radio-inline" value="@item.LocationCode" @onclick="()=>GetCheckedLine(item.LocationCode)" class="custom-control-input">
+                                        <span class="custom-control-label">@item.LocationCode</span>
+                                    </label>
+                                }
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="card mb-2">
+                    <div class="card-header" id="headingNine">
+                        <h5 class="mb-0">
+                            <button class="btn btn-link collapsed w-100" data-toggle="collapse" data-target="#collapseNine" aria-expanded="false" aria-controls="collapseNine">
+                                <span class="fas mr-3 fa-angle-down"></span> Defect
+                            </button>
+                        </h5>
+                    </div>
+                    <div id="collapseNine" class="collapse" aria-labelledby="headingNine" data-parent="#accordion3" style="">
+                        <div class="card-body">
+                            <form>
+                                @foreach (var item in _machineDefects)
+                                {
+                                    <label class="custom-control custom-checkbox custom-control-inline">
+                                        <input type="checkbox" @onchange="eventArgs => { AddListHistory(item.Id, eventArgs.Value); }" class="custom-control-input">
+                                        <span class="custom-control-label">@item.DefectNameVN</span>
+                                    </label>
+                                }
+                            </form>
+                            <div class="form-group">
+                                <label for="exampleFormControlTextarea1">Other Defects:</label>
+                                <textarea class="form-control" id="exampleFormControlTextarea1" @bind="@OtherDefect" rows="3"></textarea>
+                            </div>
+                            <div class="">
+                                
+                                <!-- Button trigger modal -->
+                                <a class="btn btn-primary text-white" data-toggle="modal" data-target="#exampleModal">
+                                    Send Defect Info
+                                </a>
+                                <!-- Modal -->
+                                <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" style="display: none;">
+                                    <div class="modal-dialog" role="document">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
+                                                <a class="close" data-dismiss="modal" aria-label="Close">
+                                                    <span aria-hidden="true">×</span>
+                                                </a>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p>Are you sure about that ?</p>
+                                            </div>
+                                            <div class="modal-footer text-white">
+                                                <a class="btn btn-secondary" data-dismiss="modal">Close</a>
+                                                <a class="btn btn-primary" data-dismiss="modal" @onclick="InsertDBHistory">Save changes</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <h5 class="mb-0">
+        <button class="btn collapsed btn-link w-100" @onclick="LinkHistoryRepair">
+            <span><i class="fas mr-3 fa-wrench"></i></span> Start Repair
+        </button>
+    </h5>
+    
+</div>
+
+
+@code {
+    public AssetInfo asset = new AssetInfo();
+    public List<FactoryModel> _factories = new List<FactoryModel>();
+    public List<Departments> _departments = new List<Departments>();
+    public List<Locations> _locations = new List<Locations>();
+    public List<MASMachineDefects> _machineDefects = new List<MASMachineDefects>();
+    public List<MASHistoryRepair> historyRepairs = new List<MASHistoryRepair>();
+    public MachineDefectsBusiness defectsBusiness = new MachineDefectsBusiness();
+    public HistoryRepairBusiness repairBusiness = new HistoryRepairBusiness();
+    public string lineChecked = "";
+    public string factoryChecked = "";
+    public string OtherDefect = "";
+    protected override async Task OnInitializedAsync()
+    {
+
+        asset = MASMauiApp.Global.ObjClass.AssetInfo;
+        _factories = await FactoryService.GetAllFactories();
+        _departments = await MasterDataBusiness.GetDepartments();
+        _locations = await MasterDataBusiness.GetLocations();
+        _machineDefects = await defectsBusiness.GetMachineDefects();
+        App.Current.On<Microsoft.Maui.Controls.PlatformConfiguration.Android>().UseWindowSoftInputModeAdjust(WindowSoftInputModeAdjust.Resize);
+    }
+    public async void GetCheckedFactory(int value, string deptCode)
+    { 
+        var result = await MasterDataBusiness.GetLocations(value);
+        _locations = result;
+        factoryChecked = deptCode; 
+        StateHasChanged();  
+    }
+    public void GetCheckedLine(string value)
+    {
+        lineChecked = value;
+        StateHasChanged();
+    }
+    public void AddListHistory(int defectId, object checkedValue)
+    {
+        bool value = (bool)checkedValue;
+        MASHistoryRepair item = new MASHistoryRepair();
+        if (value)
+        {
+            if (defectId == 18)
+            {
+                item.AssetCode = MASMauiApp.Global.ObjClass.AssetCode;
+                item.DefectId = defectId;
+                item.MethodId = 0;
+                item.RepairStatus = true;
+                item.BrokenStatus = false;
+                item.BeginWork = DateTime.Now;
+                item.EndWork = null;
+                item.WorkStatus = false;
+                item.CreatedBy = MASMauiApp.Shared.SevicesBase.LOGGEDUSER.UserId.ToString();
+                item.Line = lineChecked;
+                item.DeptCode = factoryChecked.ToString();
+                item.Method = "";
+                item.OtherDefect = OtherDefect;
+            }
+            else
+            {
+                item.AssetCode = MASMauiApp.Global.ObjClass.AssetCode;
+                item.DefectId = defectId;
+                item.MethodId = 0;
+                item.RepairStatus = true;
+                item.BrokenStatus = false;
+                item.BeginWork = DateTime.Now;
+                item.EndWork = null;
+                item.WorkStatus = false;
+                item.CreatedBy = MASMauiApp.Shared.SevicesBase.LOGGEDUSER.UserId.ToString();
+                item.Line = lineChecked;
+                item.DeptCode = factoryChecked.ToString();
+                item.Method = "";
+                item.OtherDefect = "";
+            }
+            historyRepairs.Add(item);
+        }
+        else
+        {
+            for (int i = 0; i < historyRepairs.Count; i++)
+            {
+                if (defectId == historyRepairs[i].DefectId)
+                {
+                    historyRepairs.RemoveAt(i);
+                }
+            }
+        }
+    }
+    public async void InsertDBHistory()
+    {
+        for (int i = 0; i < historyRepairs.Count; i++)
+        {
+            if (historyRepairs[i].DefectId == 18)
+            {
+                historyRepairs[i].OtherDefect = OtherDefect;
+            }
+            historyRepairs[i].Line = lineChecked;
+            historyRepairs[i].DeptCode = factoryChecked;
+            await repairBusiness.Insert(historyRepairs[i]);
+        }
+        historyRepairs.Clear();
+        _machineDefects = await defectsBusiness.GetMachineDefects();
+        NavLink.Refresh();
+        StateHasChanged();
+    }
+    public void LinkHome()
+    {
+        NavLink.NavigateTo("/Home");
+    }
+
+    public void LinkHistoryRepair()
+    {
+        NavLink.NavigateTo("/historyrepairmachine");
+    }
+}
