@@ -38,7 +38,7 @@
     <div class="card-body">
         <EditForm Model="@loginModel" OnInvalidSubmit="Submit">
             <DataAnnotationsValidator></DataAnnotationsValidator>
-            <div class="form-group">
+            @* <div class="form-group d-none">
                 <select class="form-select form-control form-control-lg" aria-label="Default select example" id="listFactory" @bind="loginModel.Factory">
                     <option selected>Open this select menu</option>
                     @foreach (var item in _departments)
@@ -47,7 +47,7 @@
                     }
                 </select>
                 <ValidationMessage For="@(()=>loginModel.Factory)"></ValidationMessage>
-            </div>
+            </div> *@
             
             <div class="form-group">
                 <input class="form-control form-control-lg" @bind-value="loginModel.UserName" id="username" type="text" placeholder="Username" autocomplete="off">
@@ -65,13 +65,13 @@
 
 
 @code {
-    List<FactoryModel> _factories = new List<FactoryModel>();
-    List<Departments> _departments = new List<Departments>();
+    //List<FactoryModel> _factories = new List<FactoryModel>();
+    //List<Departments> _departments = new List<Departments>();
     LoginModel loginModel = new LoginModel();
     protected override async Task OnInitializedAsync()
     {
-        _factories = await FactoryService.GetAllFactories();
-        _departments = await MasterDataBusiness.GetDepartments();
+        //_factories = await FactoryService.GetAllFactories();
+        //_departments = await MasterDataBusiness.GetDepartments();
         App.Current.On<Microsoft.Maui.Controls.PlatformConfiguration.Android>().UseWindowSoftInputModeAdjust(WindowSoftInputModeAdjust.Resize);
     }
 
@@ -81,7 +81,7 @@
     }
     private async void LinkHome()
     {
-        if (!string.IsNullOrWhiteSpace(loginModel.UserName) && !string.IsNullOrEmpty(loginModel.Password) && loginModel.Factory != null)
+        if (!string.IsNullOrWhiteSpace(loginModel.UserName) && !string.IsNullOrEmpty(loginModel.Password))
         {
             var apiBaseUrl = MASMauiApp.Global.MasApiUrl.amsUrl;
             var hashPw = AssetManagementApp.Shared.Encryptor.MD5Hash(loginModel.Password);
@@ -110,7 +110,6 @@
                     });
                 }
             }
-
         }
     }
 
