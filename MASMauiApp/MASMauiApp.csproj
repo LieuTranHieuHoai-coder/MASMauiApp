@@ -42,7 +42,7 @@
     <ItemGroup>
         <!-- App Icon -->
         <!--<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#512BD4" />-->
-        <MauiIcon Include="Resources\AppIcon\appicon64.svg"/>
+        <MauiIcon Include="Resources\AppIcon\appicon64.svg" />
         <!-- Splash Screen -->
         <MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#512BD4" BaseSize="128,128" />
 
@@ -95,6 +95,12 @@
 		</MauiXaml>
 		<MauiXaml Update="XamlPages\ScanBarcode.xaml">
 			<Generator>MSBuild:Compile</Generator>
+		</MauiXaml>
+		<MauiXaml Update="XamlPages\ScanChangeLoction.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</MauiXaml>
+		<MauiXaml Update="XamlPages\ScanConfirm.xaml">
+		  <Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 	</ItemGroup>
 

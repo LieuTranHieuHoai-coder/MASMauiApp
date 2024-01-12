@@ -1,3 +1,4 @@
+using MASMauiApp.Business;
 using MASMauiApp.Models;
 
 using Newtonsoft.Json;
@@ -7,10 +8,12 @@ namespace MASMauiApp.XamlPages;
 
 public partial class ScanBarcode
 {
-	public ScanBarcode()
+    public HistoryRepairBusiness repairBusiness = new HistoryRepairBusiness();
+    public ScanBarcode()
 	{
 		InitializeComponent();
 	}
+    
     private async Task<AssetInfo> GetAssetInfo(string assetCode)
     {
         try
@@ -45,6 +48,7 @@ public partial class ScanBarcode
     {
         barcodeReader.IsDetecting = false;
         AssetInfo result = await GetAssetInfo(e.Results[0].Value);
+        MASHistoryRepair item = new MASHistoryRepair();
         if (result == null)
         {
             barcodeReader.IsDetecting = true;
@@ -54,6 +58,16 @@ public partial class ScanBarcode
             barcodeReader.IsDetecting = false;
             Global.ObjClass.AssetInfo = result;
             Global.ObjClass.AssetCode = e.Results[0].Value;
+            item.AssetCode = e.Results[0].Value;
+            item.DefectId = 0;
+            item.MethodId = 0;
+            item.RepairStatus = true;
+            item.BrokenStatus = false;
+            item.BeginWork = DateTime.Now;
+            item.EndWork = null;
+            item.WorkStatus = false;
+            item.CreatedBy = MASMauiApp.Shared.SevicesBase.LOGGEDUSER.UserId.ToString();
+            await repairBusiness.Insert(item);
             Close();
         }
     }  

@@ -1,14 +1,17 @@
 ﻿@using AssetManagementApp.Models
+@using CommunityToolkit.Maui.Views
 @using MASMauiApp.Business
 @using MASMauiApp.Global
 @using MASMauiApp.Services
 @using MASMauiApp.ViewModels
+@using MASMauiApp.XamlPages
 @using Microsoft.Maui
 @using Microsoft.Maui.Controls.PlatformConfiguration.AndroidSpecific
 @using MASMauiApp.Models
 @using Newtonsoft.Json
 @using System.Text
 @inject NavigationManager NavLink
+@inject SweetAlertService Swal
 @page "/historyrepairmachine"
 <div class="card m-auto col-lg-12 col-xl-12 col-md-12 col-sm-12">
     <div class="accrodion-regular">
@@ -50,7 +53,7 @@
                             <div class="">
 
                                 <!-- Button trigger modal -->
-                                <a class="btn btn-primary text-white" data-toggle="modal" data-target="#exampleModal_@buttonid">
+                                <a class="btn btn-primary text-white d-none" data-toggle="modal" data-target="#exampleModal_@buttonid">
                                     Repair
                                 </a>
                                 <!-- Modal -->
@@ -80,15 +83,21 @@
             }
         </div>
     </div>
-    <button class="btn btn-primary" @onclick="LinkHome">Home</button>
+    <button class="btn btn-primary" @onclick="LinkAssetInfo">Trang chủ</button>
+    <br />
+    <button class="btn btn-primary" @onclick="LinkScanConfirm">
+        <span><i class="fas mr-3 fa-qrcode"></i></span> Scan xác nhận
+    </button>
 </div>
 @code {
     public HistoryRepairBusiness repairBusiness = new HistoryRepairBusiness();
     public RepairMethodBusiness methodBusiness = new RepairMethodBusiness();
     public List<MASHistoryRepairView> _historyList = new List<MASHistoryRepairView>();
     public List<MASRepairMethods> _repairMethodList = new List<MASRepairMethods>();
+    public List<MASHistoryRepair> _historyRepairList = new List<MASHistoryRepair>();
     public MASHistoryRepair historyRepair = new MASHistoryRepair();
     public string OtherMethod = "";
+    public int temp = 0;
     protected override async Task OnInitializedAsync()
     {
         var historyResult = await repairBusiness.GetMASHistoryRepairDetails(MASMauiApp.Global.ObjClass.AssetCode);
@@ -98,6 +107,7 @@
         _repairMethodList = (List<MASRepairMethods>)methodeResult.ToList();
         App.Current.On<Microsoft.Maui.Controls.PlatformConfiguration.Android>().UseWindowSoftInputModeAdjust(WindowSoftInputModeAdjust.Resize);
     }
+    //this function disable
     public async void UpdateDefect()
     {
         if (historyRepair.MethodId == 19)
@@ -111,13 +121,14 @@
         _historyList = (List<MASHistoryRepairView>)historyResult.Where(x => x.RepairStatus == true).ToList();
         NavLink.Refresh();
     }
+
     public void GetIdItem(int item)
     {
         for (int i = 0; i < _historyList.Count; i++)
         {
             if (i == item)
             {
-                historyRepair.Id = _historyList[i].Id;
+                temp = _historyList[i].Id;
             }
         }
 
@@ -129,6 +140,7 @@
         {
             if (methodId == 19)
             {
+                historyRepair.Id = temp;
                 historyRepair.MethodId = methodId;
                 historyRepair.EndWork = DateTime.Now;
                 historyRepair.RepairStatus = false;
@@ -140,6 +152,7 @@
             }
             else
             {
+                historyRepair.Id = temp;
                 historyRepair.MethodId = methodId;
                 historyRepair.EndWork = DateTime.Now;
                 historyRepair.RepairStatus = false;
@@ -148,10 +161,64 @@
                 historyRepair.AssetCode = MASMauiApp.Global.ObjClass.AssetCode;
                 historyRepair.ModifiedBy = MASMauiApp.Shared.SevicesBase.LOGGEDUSER.UserId.ToString();
             }
+            _historyRepairList.Add(new MASHistoryRepair()
+            {
+                    Id = historyRepair.Id,
+                    MethodId = historyRepair.MethodId,
+                    EndWork = historyRepair.EndWork,
+                    RepairStatus = historyRepair.RepairStatus,
+                    BrokenStatus = historyRepair.BrokenStatus,
+                    WorkStatus = historyRepair.WorkStatus,
+                    AssetCode = historyRepair.AssetCode,
+                    ModifiedBy = historyRepair.ModifiedBy
+            });
+
         }
     }
-    public void LinkHome()
+    public void LinkAssetInfo()
     {
-        NavLink.NavigateTo("/Home");
+        NavLink.NavigateTo("/assetinfo");
+    }
+
+    public async void LinkScanConfirm()
+    {
+        Global.ObjClass.HistoryRepairList = _historyRepairList;
+        var result = await App.Current.MainPage.ShowPopupAsync(new ScanConfirm(_historyRepairList));
+        if (result.Equals("wronguser"))
+        {
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Thông Báo",
+                    Text = "Sai user!",
+                    Icon = SweetAlertIcon.Warning,
+                    CancelButtonText = "Đóng"
+                });
+        }
+        else
+        {
+            if (result.Equals("success"))
+            {
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Thông Báo",
+                        Text = "Xác nhận thành công!",
+                        Icon = SweetAlertIcon.Success,
+                        CancelButtonText = "Đóng"
+                    });
+                NavLink.Refresh();
+                StateHasChanged();
+            }
+            else
+            {
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Thông Báo",
+                        Text = "Lỗi!",
+                        Icon = SweetAlertIcon.Error,
+                        CancelButtonText = "Đóng"
+                    });
+            }
+        }
+        StateHasChanged();
     }
 }

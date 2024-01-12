@@ -22,5 +22,7 @@ namespace MASMauiApp.Models
         public string OtherDefect { get; set; }
         public string Method { get; set; }
         public string OtherMethod {  get; set; }
+        public string ConfirmUser { get; set; }
+        public DateTime? ConfirmDate { get; set; }
     }
 }

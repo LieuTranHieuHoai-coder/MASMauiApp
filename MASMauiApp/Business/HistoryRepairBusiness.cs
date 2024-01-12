@@ -1,7 +1,9 @@
 ﻿using MASMauiApp.Global;
+using MASMauiApp.Models;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,7 +18,7 @@ namespace MASMauiApp.Business
             {
                 using (var client = new HttpClient { BaseAddress = new Uri(MasApiUrl.localUrl) })
                 {
-                    var api = "/api/MASHistoryRepair/GetMASHistoryRepair";
+                    var api = "/api/HistoryRepair/GetMASHistoryRepair";
                     var response = await client.GetAsync(api);
                     if (response.IsSuccessStatusCode)
                     {
@@ -167,19 +169,44 @@ namespace MASMauiApp.Business
                     var api = "/api/HistoryRepair/Update";
                     var convert = JsonConvert.SerializeObject(repair);
                     var data = new StringContent(convert, Encoding.UTF8, "application/json");
-                    var response = await client.PutAsync(api, data);
+                    var response = await client.PostAsync(api, data);
                     if (response.IsSuccessStatusCode)
                     {
                         return 1;
                     }
-
+                    Debug.WriteLine(data.ToString());
                     return 0;
                 }
+                //return 0;
             }
             catch (Exception ex)
             {
                 string msg = ex.Message;
                 return 0;
+            }
+        }
+        public async Task<Users> ConfirmUser(string hascode)
+        {
+            try
+            {
+                using (var client = new HttpClient { BaseAddress = new Uri(MasApiUrl.localUrl) })
+                {
+                    var api = "/api/HistoryRepair/Confirm/" + hascode;
+                    var response = await client.GetAsync(api);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var content = await response.Content.ReadAsStringAsync();
+                        var result = JsonConvert.DeserializeObject<Users>(content);
+                        return result;
+                    }
+
+                    return null;
+                }
+            }
+            catch (Exception ex)
+            {
+                string msg = ex.Message;
+                return null;
             }
         }
     }

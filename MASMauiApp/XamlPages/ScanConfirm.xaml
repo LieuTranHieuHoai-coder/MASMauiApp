@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<toolkit:Popup xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="MASMauiApp.XamlPages.ScanConfirm"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             xmlns:zxing="clr-namespace:ZXing.Net.Maui.Controls;assembly=ZXing.Net.MAUI.Controls"
+             xmlns:zxingoptions="clr-namespace:ZXing.Net.Maui;assembly=ZXing.Net.MAUI">
+    <ScrollView>
+        <VerticalStackLayout>
+            <zxing:CameraBarcodeReaderView x:Name="barcodeReader" 
+                                       WidthRequest="450" 
+                                       HeightRequest="450" 
+                                       IsDetecting="True" 
+                                       IsTorchOn="False" 
+                                       BarcodesDetected="barcodeReader_BarcodesDetected">
+
+            </zxing:CameraBarcodeReaderView>
+        </VerticalStackLayout>
+    </ScrollView>
+</toolkit:Popup>

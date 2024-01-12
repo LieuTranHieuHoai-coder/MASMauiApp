@@ -1,7 +1,9 @@
 ﻿@page "/assetinfo"
 @using AssetManagementApp.Models
+@using CommunityToolkit.Maui.Views
 @using MASMauiApp.Business
 @using MASMauiApp.Services
+@using MASMauiApp.XamlPages
 @using Microsoft.Maui
 @using Microsoft.Maui.Controls.PlatformConfiguration.AndroidSpecific
 @using MASMauiApp.Models
@@ -9,12 +11,13 @@
 @inject IFactory FactoryService
 @inject GoBack goback
 @inject NavigationManager NavLink
+@inject SweetAlertService Swal
 
 <div class="card m-auto col-lg-12 col-xl-12 col-md-12 col-sm-12">
     <div class="mt-1">
         <div class="text-left">
             <NavLink class="nav-link">
-                <img class="logo-img" src="../assets/images/LogoMas.PNG" alt="logo">
+                <img class="logo-img" src="../assets/images/logomas.png" alt="logo">
             </NavLink>
         </div>
     </div>
@@ -90,7 +93,7 @@
                                 @foreach (var item in _locations)
                                 {
                                     <label class="custom-control custom-radio custom-control-inline">
-                                        <input type="radio" name="radio-inline" value="@item.LocationCode" @onclick="()=>GetCheckedLine(item.LocationCode)" class="custom-control-input">
+                                        <input type="radio" name="radio-inline" value="@item.LocationCode" @onclick="()=>GetCheckedLine(item)" class="custom-control-input">
                                         <span class="custom-control-label">@item.LocationCode</span>
                                     </label>
                                 }
@@ -151,19 +154,39 @@
                         </div>
                     </div>
                 </div>
+                <div class="card mb-2">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <button class="btn collapsed btn-link w-100" @onclick="LinkScanLocation">
+                                <span><i class="fas mr-3 fa-qrcode"></i></span> Change Loction
+                            </button>
+                        </h5>
+                    </div>
+                </div>
+                <div class="card mb-2">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <button class="btn collapsed btn-link w-100" @onclick="LinkHistoryRepair">
+                                <span><i class="fas mr-3 fa-wrench"></i></span> Finish Repair
+                            </button>
+                        </h5>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-    <h5 class="mb-0">
-        <button class="btn collapsed btn-link w-100" @onclick="LinkHistoryRepair">
-            <span><i class="fas mr-3 fa-wrench"></i></span> Start Repair
-        </button>
-    </h5>
+
     
+    <div class="mb-0">
+        <p>Nhập Code:</p>
+        <input id="inputText3" type="text" @bind="@InputCode" class="form-control">
+        <button class="btn btn-primary mt-3 w-100" @onclick="LinkChangeLocation">Enter</button>
+    </div>
 </div>
 
 
 @code {
+    public string InputCode = "";
     public AssetInfo asset = new AssetInfo();
     public List<FactoryModel> _factories = new List<FactoryModel>();
     public List<Departments> _departments = new List<Departments>();
@@ -173,6 +196,7 @@
     public MachineDefectsBusiness defectsBusiness = new MachineDefectsBusiness();
     public HistoryRepairBusiness repairBusiness = new HistoryRepairBusiness();
     public string lineChecked = "";
+    public int locationId = 0;
     public string factoryChecked = "";
     public string OtherDefect = "";
     protected override async Task OnInitializedAsync()
@@ -192,9 +216,10 @@
         factoryChecked = deptCode; 
         StateHasChanged();  
     }
-    public void GetCheckedLine(string value)
+    public void GetCheckedLine(Locations value)
     {
-        lineChecked = value;
+        Global.ObjClass.locationid = value.LocationId;
+        lineChecked = value.LocationCode;
         StateHasChanged();
     }
     public void AddListHistory(int defectId, object checkedValue)
@@ -252,6 +277,7 @@
     {
         for (int i = 0; i < historyRepairs.Count; i++)
         {
+
             if (historyRepairs[i].DefectId == 18)
             {
                 historyRepairs[i].OtherDefect = OtherDefect;
@@ -273,5 +299,55 @@
     public void LinkHistoryRepair()
     {
         NavLink.NavigateTo("/historyrepairmachine");
+    }
+    public async void LinkScanLocation()
+    {
+        var result = await App.Current.MainPage.ShowPopupAsync(new ScanChangeLoction());
+        //NavLink.NavigateTo("/assetinfo");
+        await Swal.FireAsync(new SweetAlertOptions
+            {
+                Title = "Success",
+                Text = result.ToString(),
+                Icon = SweetAlertIcon.Success,
+                CancelButtonText = "Đóng"
+            });
+
+        StateHasChanged();
+    }
+    public async void LinkChangeLocation()
+    {
+        try
+        {
+            using (var client = new HttpClient { BaseAddress = new Uri(Global.MasApiUrl.amsUrl) })
+            {
+                var api = "/api/SetLocation?locid=" + Global.ObjClass.locationid + "&qr=" + InputCode + "&user=" + Shared.SevicesBase.LOGGEDUSER.UserName;
+                var response = await client.GetAsync(api);
+                if (response.IsSuccessStatusCode)
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Success",
+                            Text = "Thành công",
+                            Icon = SweetAlertIcon.Success,
+                            CancelButtonText = "Đóng"
+                        });
+                }
+                else
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Error",
+                            Text =response.Content.ToString(),
+                            Icon = SweetAlertIcon.Error,
+                            CancelButtonText = "Đóng"
+                        });
+                }
+            }
+        }
+        catch (Exception)
+        {
+
+            throw;
+        }
     }
 }

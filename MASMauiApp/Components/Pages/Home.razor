@@ -460,6 +460,7 @@ p {
 
 @code {
     public string InputCode = "";
+    public Business.HistoryRepairBusiness repairBusiness = new Business.HistoryRepairBusiness();
     private async void OpenPopup()
     {
         var result = await App.Current.MainPage.ShowPopupAsync(new ScanBarcode());
@@ -516,16 +517,30 @@ p {
                 MASMauiApp.Global.ObjClass.AssetInfo = result;
                 //Global.ObjClass.AssetCode = "2156120910304";
                 MASMauiApp.Global.ObjClass.AssetCode = InputCode;
+                MASHistoryRepair item = new MASHistoryRepair();
+                Global.ObjClass.AssetInfo = result;
+                
+                item.AssetCode = InputCode;
+                item.DefectId = 0;
+                item.MethodId = 0;
+                item.RepairStatus = true;
+                item.BrokenStatus = false;
+                item.BeginWork = DateTime.Now;
+                item.EndWork = null;
+                item.WorkStatus = false;
+                item.CreatedBy = MASMauiApp.Shared.SevicesBase.LOGGEDUSER.UserId.ToString();
+                await repairBusiness.Insert(item);
+              
                 NavLink.NavigateTo("/assetinfo");
             }
             else
             {
                 await Swal.FireAsync(new SweetAlertOptions
                     {
-                        Title = "Confirmation",
-                        Text = "QrCode not found",
+                        Title = "Thông báo",
+                        Text = "QrCode không tìm thấy!",
                         Icon = SweetAlertIcon.Error,
-                        CancelButtonText = "Cancel"
+                        CancelButtonText = "Đóng"
                     });
             }
         }
@@ -533,10 +548,10 @@ p {
         {
             await Swal.FireAsync(new SweetAlertOptions
                 {
-                    Title = "Confirmation",
-                    Text = "You cannot empty value!",
+                    Title = "Thông báo",
+                    Text = "Dữ liệu không được để trống!",
                     Icon = SweetAlertIcon.Warning,
-                    CancelButtonText = "Cancel"
+                    CancelButtonText = "Đóng"
                 });
         }
     }
