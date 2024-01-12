@@ -1,6 +1,5 @@
 using MASMauiApp.Business;
 using MASMauiApp.Models;
-
 using Newtonsoft.Json;
 
 
@@ -55,20 +54,32 @@ public partial class ScanBarcode
         }
         else
         {
-            barcodeReader.IsDetecting = false;
-            Global.ObjClass.AssetInfo = result;
-            Global.ObjClass.AssetCode = e.Results[0].Value;
-            item.AssetCode = e.Results[0].Value;
-            item.DefectId = 0;
-            item.MethodId = 0;
-            item.RepairStatus = true;
-            item.BrokenStatus = false;
-            item.BeginWork = DateTime.Now;
-            item.EndWork = null;
-            item.WorkStatus = false;
-            item.CreatedBy = MASMauiApp.Shared.SevicesBase.LOGGEDUSER.UserId.ToString();
-            await repairBusiness.Insert(item);
-            Close();
+            List<MASHistoryRepair> listrepair = new List<MASHistoryRepair>();
+            listrepair = await repairBusiness.GetMASHistoryRepairAsset(result.AssetCode);
+            var temp = listrepair.Where(x => x.DefectId == 0).ToList();
+            int range = temp.Where(x => x.RepairStatus == true).ToList().Count;
+            if (range > 0)
+            {
+                Close("repair");
+            }
+            else
+            {
+                barcodeReader.IsDetecting = false;
+                Global.ObjClass.AssetInfo = result;
+                Global.ObjClass.AssetCode = e.Results[0].Value;
+                item.AssetCode = e.Results[0].Value;
+                item.DefectId = 0;
+                item.MethodId = 0;
+                item.RepairStatus = true;
+                item.BrokenStatus = false;
+                item.BeginWork = DateTime.Now;
+                item.EndWork = null;
+                item.WorkStatus = false;
+                item.CreatedBy = MASMauiApp.Shared.SevicesBase.LOGGEDUSER.UserId.ToString();
+                await repairBusiness.Insert(item);
+                Close();
+            }
+            
         }
     }  
 }

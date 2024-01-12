@@ -124,31 +124,39 @@
                                 <label for="exampleFormControlTextarea1">Other Defects:</label>
                                 <textarea class="form-control" id="exampleFormControlTextarea1" @bind="@OtherDefect" rows="3"></textarea>
                             </div>
-                            <div class="">
-                                
-                                <!-- Button trigger modal -->
-                                <a class="btn btn-primary text-white" data-toggle="modal" data-target="#exampleModal">
-                                    Send Defect Info
-                                </a>
-                                <!-- Modal -->
-                                <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" style="display: none;">
-                                    <div class="modal-dialog" role="document">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
-                                                <a class="close" data-dismiss="modal" aria-label="Close">
-                                                    <span aria-hidden="true">×</span>
-                                                </a>
-                                            </div>
-                                            <div class="modal-body">
-                                                <p>Are you sure about that ?</p>
-                                            </div>
-                                            <div class="modal-footer text-white">
-                                                <a class="btn btn-secondary" data-dismiss="modal">Close</a>
-                                                <a class="btn btn-primary" data-dismiss="modal" @onclick="InsertDBHistory">Save changes</a>
-                                            </div>
-                                        </div>
-                                    </div>
+                            
+                        </div>
+                    </div>
+                </div>
+                <div class="card mb-2">
+
+                    <!-- Button trigger modal -->
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <h5 class="mb-0">
+                                <button class="btn collapsed btn-link w-100" data-toggle="modal" data-target="#exampleModal">
+                                    <span><i class="fas mr-3 fa-paper-plane"></i></span> Gửi lỗi
+                                </button>
+                            </h5>
+                        </h5>
+                    </div>
+                    
+                    <!-- Modal -->
+                    <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" style="display: none;">
+                        <div class="modal-dialog" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
+                                    <a class="close" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">×</span>
+                                    </a>
+                                </div>
+                                <div class="modal-body">
+                                    <p>Bạn có muốn gửi các lỗi này ?</p>
+                                </div>
+                                <div class="modal-footer text-white">
+                                    <a class="btn btn-secondary" data-dismiss="modal">Đóng</a>
+                                    <a class="btn btn-primary" data-dismiss="modal" @onclick="InsertDBHistory">Lưu</a>
                                 </div>
                             </div>
                         </div>
@@ -158,7 +166,7 @@
                     <div class="card-header">
                         <h5 class="mb-0">
                             <button class="btn collapsed btn-link w-100" @onclick="LinkScanLocation">
-                                <span><i class="fas mr-3 fa-qrcode"></i></span> Change Loction
+                                <span><i class="fas mr-3 fa-qrcode"></i></span> Đổi vị trí
                             </button>
                         </h5>
                     </div>
@@ -167,7 +175,7 @@
                     <div class="card-header">
                         <h5 class="mb-0">
                             <button class="btn collapsed btn-link w-100" @onclick="LinkHistoryRepair">
-                                <span><i class="fas mr-3 fa-wrench"></i></span> Finish Repair
+                                <span><i class="fas mr-3 fa-wrench"></i></span> Hoàn tất sửa chữa
                             </button>
                         </h5>
                     </div>

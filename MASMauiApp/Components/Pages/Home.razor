@@ -393,13 +393,13 @@ p {
                                                     <span class="icon">
                                                         <i class="fas fa-qrcode"></i>
                                                     </span>
-                                                    <span class="title font-weight-bold">Scan Defect</span>
+                                                    <span class="title font-weight-bold">Scan Lỗi</span>
                                                 </span>
                                                 
                                             </a>
                                         </div>
                                     </div>
-                                    <div class="col-sm">
+                                    <div class="col-sm d-none">
                                         <div class="hexagon-item" @onclick="OpenPopupRepair">
                                             <div class="hex-item">
                                                 <div></div>
@@ -464,7 +464,15 @@ p {
     private async void OpenPopup()
     {
         var result = await App.Current.MainPage.ShowPopupAsync(new ScanBarcode());
-        NavLink.NavigateTo("/assetinfo");
+        if (result.ToString().Equals("repair"))
+        {
+            NavLink.NavigateTo("/historyrepairmachine");
+        }
+        else
+        {
+            NavLink.NavigateTo("/assetinfo");
+        }
+        
         StateHasChanged();
     }
     private async void OpenPopupRepair()
@@ -519,19 +527,29 @@ p {
                 MASMauiApp.Global.ObjClass.AssetCode = InputCode;
                 MASHistoryRepair item = new MASHistoryRepair();
                 Global.ObjClass.AssetInfo = result;
-                
-                item.AssetCode = InputCode;
-                item.DefectId = 0;
-                item.MethodId = 0;
-                item.RepairStatus = true;
-                item.BrokenStatus = false;
-                item.BeginWork = DateTime.Now;
-                item.EndWork = null;
-                item.WorkStatus = false;
-                item.CreatedBy = MASMauiApp.Shared.SevicesBase.LOGGEDUSER.UserId.ToString();
-                await repairBusiness.Insert(item);
-              
-                NavLink.NavigateTo("/assetinfo");
+
+                List<MASHistoryRepair> listrepair = new List<MASHistoryRepair>();
+                listrepair = await repairBusiness.GetMASHistoryRepairAsset(result.AssetCode);
+                var temp = listrepair.Where(x => x.DefectId == 0).ToList();
+                int range = temp.Where(x => x.RepairStatus == true).ToList().Count;
+                if (range > 0)
+                {
+                    NavLink.NavigateTo("/historyrepairmachine");
+                }
+                else
+                {
+                    item.AssetCode = InputCode;
+                    item.DefectId = 0;
+                    item.MethodId = 0;
+                    item.RepairStatus = true;
+                    item.BrokenStatus = false;
+                    item.BeginWork = DateTime.Now;
+                    item.EndWork = null;
+                    item.WorkStatus = false;
+                    item.CreatedBy = MASMauiApp.Shared.SevicesBase.LOGGEDUSER.UserId.ToString();
+                    await repairBusiness.Insert(item);
+                    NavLink.NavigateTo("/assetinfo");
+                }
             }
             else
             {

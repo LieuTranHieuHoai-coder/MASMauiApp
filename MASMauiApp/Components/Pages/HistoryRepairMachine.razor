@@ -172,14 +172,12 @@
                     AssetCode = historyRepair.AssetCode,
                     ModifiedBy = historyRepair.ModifiedBy
             });
-
         }
     }
     public void LinkAssetInfo()
     {
         NavLink.NavigateTo("/assetinfo");
     }
-
     public async void LinkScanConfirm()
     {
         Global.ObjClass.HistoryRepairList = _historyRepairList;

@@ -1,6 +1,7 @@
 using MASMauiApp.Business;
 using MASMauiApp.Global;
 using MASMauiApp.Models;
+using Microsoft.AspNetCore.Components.Routing;
 using Newtonsoft.Json;
 using System.Text;
 
@@ -27,18 +28,34 @@ public partial class ScanConfirm
        
         if (result == null)
         {
-            //barcodeReader.IsDetecting = true;
             Close("wronguser");
         }
         else
         {
-            //barcodeReader.IsDetecting = false;
-            //for (int i = 0; i < _repair.Count; i++)
-            //{
-            //    _repair[i].ConfirmDate = DateTime.Now;
-            //    _repair[i].ConfirmUser = result.UserName;
-            //    await HistoryRepairBusiness.Update(_repair[i]);
-            //}
+            List<MASHistoryRepair> listrepair = new List<MASHistoryRepair>();
+            listrepair = await HistoryRepairBusiness.GetMASHistoryRepairAsset(Global.ObjClass.AssetCode);
+            var temp = listrepair.Where(x => x.DefectId == 0).ToList();
+            var listFirstScan = temp.Where(x => x.RepairStatus == true).ToList();
+            if (listFirstScan.Count > 0)
+            {
+                for (int i = 0; i < listFirstScan.Count; i++)
+                {
+                    if (listFirstScan[i].RepairStatus == true)
+                    {
+                        await HistoryRepairBusiness.Update(new MASHistoryRepair
+                        {
+                            ConfirmUser = result.UserName,
+                            Id = listFirstScan[i].Id,
+                            RepairStatus = false,
+                            ConfirmDate = DateTime.Now,
+                            BrokenStatus = false,
+                            WorkStatus = true,
+                    });
+                    }
+                }
+                
+            }
+
             foreach (var pair in _repair)
             {
                 pair.ConfirmDate = DateTime.Now;
@@ -46,7 +63,6 @@ public partial class ScanConfirm
                 var a = await HistoryRepairBusiness.Update(pair);
                 if (a <= 0)
                 {
-
                     Close();
                 }
             }
