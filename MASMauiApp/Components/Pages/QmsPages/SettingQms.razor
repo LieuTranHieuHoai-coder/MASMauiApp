@@ -1,0 +1,73 @@
+﻿@page "/settingqms"
+@using MASMauiApp.Business
+@using Microsoft.Maui.Controls.PlatformConfiguration.AndroidSpecific
+@using QMS.Models
+
+<style>
+    html,
+    body {
+        height: 100%;
+    }
+
+    body {
+        display: -ms-flexbox;
+        display: flex;
+        -ms-flex-align: center;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .card {
+        padding: 0px !important;
+    }
+</style>
+<div class="card">
+    <div class="card-header text-center">
+        <NavLink class="nav-link">
+            <img class="logo-img" src="../assets/images/qmslogo.png" alt="logo">
+        </NavLink>
+        <span class="splash-description">Please enter your user information.</span>
+    </div>
+    <div class="card-body">
+        <select class="form-select form-control form-control-lg" aria-label="Default select example" id="listFactory" @bind=@_site>
+            <option selected>Open this select menu</option>
+            @foreach (var item in _xSite)
+            {
+                <option value="@item.ProductionWorkShop">@item.ProductionWorkShop</option>
+            }
+        </select>
+        <select class="form-select form-control form-control-lg" aria-label="Default select example" id="listFactory" @bind=@_factory>
+            <option selected>Open this select menu</option>
+            @foreach (var item in _xFactories)
+            {
+                <option value="@item.ProductionWorkShop">@item.ProductionWorkShop</option>
+            }
+        </select>
+        <select class="form-select form-control form-control-lg" aria-label="Default select example" id="listFactory" @bind=@_line>
+            <option selected>Open this select menu</option>
+            @foreach (var item in _xLines)
+            {
+                <option value="@item.ProductionWorkShop">@item.ProductionWorkShop</option>
+            }
+        </select>
+    </div>
+
+</div>
+
+@code {
+    public QmsSettingBusiness qmsSetting = new QmsSettingBusiness();
+    public string _site { get; set; }
+    public string _factory { get; set; }
+    public string _line { get; set; }
+    public List<xFactory> _xSite = new List<xFactory>();
+    public List<xFactory> _xFactories = new List<xFactory>();
+    public List<xFactory> _xLines = new List<xFactory>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _xSite = await qmsSetting.GetSites();
+        _xFactories = await qmsSetting.GetFactories(_site);
+        _xLines = await qmsSetting.GetSewLines(_site,_factory);
+        App.Current.On<Microsoft.Maui.Controls.PlatformConfiguration.Android>().UseWindowSoftInputModeAdjust(WindowSoftInputModeAdjust.Resize);
+    }
+}

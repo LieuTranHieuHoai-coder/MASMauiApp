@@ -17,7 +17,7 @@ namespace AssetManagementApp.Business
         {
             try
             {
-                using (var client = new HttpClient { BaseAddress = new Uri("http://192.168.1.42:7000") })
+                using (var client = new HttpClient { BaseAddress = new Uri(MASMauiApp.Global.MasApiUrl.masUrl) })
                 {
                     var api = $"/api/SetLocation?locid={locID}&qr={assetCode}&user={user}";
                     var response = await client.GetAsync(api);
@@ -39,7 +39,7 @@ namespace AssetManagementApp.Business
         {
             try
             {
-                using (var client = new HttpClient { BaseAddress = new Uri("http://192.168.1.42:7000") })
+                using (var client = new HttpClient { BaseAddress = new Uri(MASMauiApp.Global.MasApiUrl.masUrl) })
                 {
                     var api = $"/api/SyncLocation";
                     var content = new StringContent(JsonConvert.SerializeObject(location), Encoding.UTF8, "application/json");

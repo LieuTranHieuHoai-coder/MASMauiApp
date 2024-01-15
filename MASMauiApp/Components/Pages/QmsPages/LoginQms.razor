@@ -1,0 +1,257 @@
+﻿@page "/loginqms"
+@using AssetManagementApp.Shared
+@using CommunityToolkit.Maui.Views
+@using MASMauiApp.Models.QmsModels
+@using MASMauiApp.XamlPages
+@using Newtonsoft.Json
+@using Microsoft.Maui.Controls.PlatformConfiguration.AndroidSpecific
+@using QMS.Models.PermitModels
+@inject NavigationManager NavLink
+@inject SweetAlertService Swal
+<style>
+    html,
+    body {
+        height: 100%;
+    }
+
+    body {
+        display: -ms-flexbox;
+        display: flex;
+        -ms-flex-align: center;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .card {
+        padding: 0px !important;
+    }
+</style>
+<div class="card">
+    <div class="card-header text-center">
+        <NavLink class="nav-link">
+            <img class="logo-img" src="../assets/images/qmslogo.png" alt="logo">
+        </NavLink>
+        <span class="splash-description">Please enter your user information.</span>
+    </div>
+    <div class="card-body">
+        <EditForm Model="@loginModel" OnInvalidSubmit="Submit">
+            <DataAnnotationsValidator></DataAnnotationsValidator>
+            <div class="form-group">
+                <input class="form-control form-control-lg" @bind-value="loginModel.Uid" id="username" type="text" placeholder="Username" autocomplete="off">
+                <ValidationMessage For="@(()=>loginModel.Uid)"></ValidationMessage>
+            </div>
+            <div class="form-group">
+                <input class="form-control form-control-lg" @bind-value="loginModel.Pw" id="password" type="password" placeholder="Password">
+                <ValidationMessage For="@(()=>loginModel.Pw)"></ValidationMessage>
+            </div>
+            <div>
+                <button type="submit" class="btn btn-primary btn-lg btn-block" @onclick="LinkHome">Login</button>
+            </div>
+            
+            <div>
+                <button class="btn btn-primary btn-lg btn-block" @onclick="ScanLogin">Scan Login</button>
+            </div>
+            
+        </EditForm>
+    </div>
+
+</div>
+
+@code {
+    xUser loginModel = new xUser();
+    protected override async Task OnInitializedAsync()
+    {
+        App.Current.On<Microsoft.Maui.Controls.PlatformConfiguration.Android>().UseWindowSoftInputModeAdjust(WindowSoftInputModeAdjust.Resize);
+    }
+    private void Submit()
+    {
+
+    }
+    private async Task GetPermision(int id)
+    {
+        try
+        {
+            using (var client = new HttpClient { BaseAddress = new Uri(Global.MasApiUrl.qmsApiUrl) })
+            {
+                var api = $"/getperm/{id}";
+                var response = await client.GetAsync(api);
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    if (!string.IsNullOrEmpty(content))
+                    {
+                        var perms = JsonConvert.DeserializeObject<List<AdminGroupPerm>>(content);
+                        Global.ObjClass.Permisions.AddRange(perms);
+                    }
+                }
+            }
+        }
+        catch (Exception)
+        {
+
+            throw;
+        }
+    }
+    public async Task SetWorkPlace(string uid)
+    {
+        try
+        {
+            using (var client = new HttpClient { BaseAddress = new Uri(Global.MasApiUrl.qmsApiUrl) })
+            {
+                var api = "/qc/master/GetUserWorkPlace/" + uid;
+                var response = await client.GetAsync(api);
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    if (!string.IsNullOrEmpty(content))
+                    {
+                        var place = JsonConvert.DeserializeObject<UserWorkPlace>(content);
+                        if (place != null)
+                        {
+                            Global.ObjClass.WorkingFactory = place.WorkingFact;
+                            Global.ObjClass.WorkingSite = place.WorkingSite;
+                            Global.ObjClass.WorkingLine = place.WorkingLine;
+                        }
+                    }
+                }
+                else
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Thông Báo!",
+                            Text = "Chọn xưởng!",
+                            Icon = SweetAlertIcon.Warning,
+                            CancelButtonText = "Đóng"
+                        });
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Thông Báo!",
+                    Text = ex.Message.ToString(),
+                    Icon = SweetAlertIcon.Warning,
+                    CancelButtonText = "Đóng"
+                });
+        }
+    }
+    private async void LinkHome()
+    {
+        if (loginModel.Uid == null || loginModel.Uid.Contains("'") || loginModel.Uid.Contains(" ") || loginModel.Uid == "" || loginModel.Pw == "")
+        {
+            loginModel.Uid = "";
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Thông Báo!",
+                    Text = "Tên đăng nhập hoặc mật khẩu không chính xác.",
+                    Icon = SweetAlertIcon.Warning,
+                    CancelButtonText = "Đóng"
+                });
+        }
+        else
+        {
+            var hashPwd = Encryptor.MD5Hash(loginModel.Pw);
+            var authorCode = Encryptor.MD5Hash(loginModel.Uid + hashPwd);
+            using (var client = new HttpClient { BaseAddress = new Uri(Global.MasApiUrl.qmsApiUrl) })
+            {
+                var api = $"/login/{authorCode}";
+                var response = await client.GetAsync(api);
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    if (!string.IsNullOrEmpty(content))
+                    {
+                        var user = JsonConvert.DeserializeObject<xUser>(content);
+                        if (user != null)
+                        {
+                            Global.ObjClass.LoggedUser = user;
+                            //await GetPermision(user.Id);
+                            //await SetWorkPlace(user.Uid);
+                        }
+                    }
+                    //Application.Current.MainPage = new Setting();
+                    NavLink.NavigateTo("/");
+                }
+                else
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Thông Báo!",
+                            Text = "Tên đăng nhập hoặc mật khẩu không chính xác.",
+                            Icon = SweetAlertIcon.Warning,
+                            CancelButtonText = "Đóng"
+                        });
+                }
+            }
+        }
+    }
+    private async void ScanLogin()
+    {
+        var result = await App.Current.MainPage.ShowPopupAsync(new ScanLogin());
+        if (result.ToString().Equals("success"))
+        {
+            NavLink.NavigateTo("/settingqms");
+        }
+        else
+        {
+            if (result.ToString().Equals("invalid"))
+            {
+                await Swal.FireAsync(
+                   new SweetAlertOptions
+                   {
+                       Title = "Warrning",
+                       Text = "Mã QR Code không hợp lệ",
+                       Icon = SweetAlertIcon.Warning,
+                       CancelButtonText = "Đóng"
+                   }
+                );
+            }
+            else
+            {
+                if (result.ToString().Equals("internet"))
+                {
+                    await Swal.FireAsync(
+                               new SweetAlertOptions
+                               {
+                                   Title = "Error",
+                                   Text = "Mất kết nối internet",
+                                   Icon = SweetAlertIcon.Warning,
+                                   CancelButtonText = "Đóng"
+                               }
+                           );
+                }
+                else
+                {
+                    if (result.ToString().Equals("workplace"))
+                    {
+                        await Swal.FireAsync(
+                                   new SweetAlertOptions
+                                       {
+                                           Title = "Error",
+                                           Text = "Set Work Place không thành công",
+                                           Icon = SweetAlertIcon.Warning,
+                                           CancelButtonText = "Đóng"
+                                       }
+                               );
+                    }
+                    else
+                    {
+                        await Swal.FireAsync(
+                                   new SweetAlertOptions
+                                       {
+                                           Title = "Error",
+                                           Text = result.ToString(),
+                                           Icon = SweetAlertIcon.Error,
+                                           CancelButtonText = "Đóng"
+                                       }
+                               );
+                    }
+                }
+            }
+        }
+
+        StateHasChanged();
+    }
+}

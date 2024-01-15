@@ -58,6 +58,7 @@
                 <ValidationMessage For="@(()=>loginModel.Password)"></ValidationMessage>
             </div>
             <button type="submit" class="btn btn-primary btn-lg btn-block" @onclick="LinkHome">Login</button>
+            <button class="btn btn-primary btn-lg btn-block" @onclick="LinkQMS">LinkQMS</button>
         </EditForm>
     </div>
 
@@ -112,5 +113,8 @@
             }
         }
     }
-
+    private void LinkQMS()
+    {
+        NavLink.NavigateTo("/loginqms");
+    }
 }

@@ -11,6 +11,7 @@ namespace MASMauiApp.Global
         public static string masUrl = "http://mas.qve.com/qrconnect.php?ID_Keys=";
         public static string amsUrl = "http://192.168.1.42:7000";
         public static string localUrl = "http://192.168.1.42:7000";
+        public static string qmsApiUrl = "http://192.168.1.46:9999";
         //public static string localUrl = "http://192.168.1.136:7000";
     }
 }
